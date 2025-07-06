@@ -205,6 +205,11 @@ class FlowStateCLI:
     help='Output directory for analysis'
 )
 @click.option(
+    '--cookie-file', '-c',
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    help='Path to a Netscape-format cookies file for yt-dlp authentication'
+)
+@click.option(
     '--skip-publish',
     is_flag=True,
     help='Skip GitHub publishing step'
@@ -215,7 +220,7 @@ class FlowStateCLI:
     help='Enable debug mode'
 )
 @click.version_option(version=settings.version)
-def main(url: Optional[str], output: Optional[Path],
+def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path],
          skip_publish: bool, debug: bool):
     """
     FlowState-CLI: Transform Tai Chi videos into interactive 3D analyses.
@@ -229,6 +234,8 @@ def main(url: Optional[str], output: Optional[Path],
     if output:
         settings.output_dir = output
         settings.create_directories()
+    if cookie_file:
+        settings.yt_dlp_cookiefile = cookie_file
 
     # Initialize CLI
     cli = FlowStateCLI()

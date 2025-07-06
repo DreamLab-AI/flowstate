@@ -77,6 +77,28 @@ To analyze a YouTube video and publish the interactive 3D visualization to GitHu
 
     The tool will create a new GitHub repository (or use an existing one if the name matches) and publish your analysis to GitHub Pages. The URL to your live analysis will be displayed in the console.
 
+### Using a Cookie File for Authentication
+
+Some videos may require you to be logged into a YouTube account. If you encounter issues, you can use the `--cookie-file` option to provide a `cookies.txt` file for authentication.
+
+**Generating a `cookies.txt` File**
+
+You can use a browser extension to export your YouTube cookies in the required Netscape format. Here are a few options:
+
+*   **Get cookies.txt LOCALLY:** [Chrome](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) | [Firefox](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
+*   **EditThisCookie:** [Chrome](https://chrome.google.com/webstore/detail/editthiscookie/fngmhnnpilhplaeedifhccceomclgfbg)
+
+**Instructions:**
+
+1.  Install one of the recommended extensions.
+2.  Navigate to [youtube.com](https://www.youtube.com) and log in to your account.
+3.  Click the extension's icon in your browser's toolbar.
+4.  Export your cookies in **Netscape** format and save the file as `cookies.txt`.
+5.  Use the `--cookie-file` option to provide the path to your `cookies.txt` file when running the application:
+    ```bash
+    docker run --rm -it -v /path/to/your/cookies.txt:/app/cookies.txt flowstate:1.0 --url "YOUTUBE_URL" --cookie-file /app/cookies.txt
+    ```
+
 ## Development
 
 ### Local Setup (without Docker)

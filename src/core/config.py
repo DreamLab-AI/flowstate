@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     video_download_quality: str = "best"
     video_max_duration: int = 600  # 10 minutes
     frame_extraction_fps: int = 30
+    yt_dlp_cookiefile: Optional[Path] = None
 
     # Pose detection settings
     pose_model: Literal["mediapipe", "yolov8"] = "mediapipe"

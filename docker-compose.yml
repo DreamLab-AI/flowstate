@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  flowstate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: flowstate-cli:latest
+    container_name: flowstate-analyzer
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+    
+    # Volumes for persistence and data exchange
+    volumes:
+      # Input/Output directories
+      - ./data/input:/data/input:ro
+      - ./data/output:/app/output:rw
+      - ./logs:/app/logs:rw
+      
+      # Cache directory for faster processing
+      - flowstate-cache:/tmp/flowstate/cache
+      
+      # Viewer directory for development
+      - ./viewer:/app/viewer:ro
+    
+    # Environment configuration
+    environment:
+      # Processing settings
+      - FLOWSTATE_OUTPUT_DIR=/app/output
+      - FLOWSTATE_LOG_DIR=/app/logs
+      - FLOWSTATE_CACHE_DIR=/tmp/flowstate/cache
+      - FLOWSTATE_TEMP_DIR=/tmp/flowstate
+      
+      # Performance tuning
+      - OMP_NUM_THREADS=4
+      - OPENCV_VIDEOIO_PRIORITY_FFMPEG=1
+      
+      # Logging
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    
+    # Network settings
+    network_mode: bridge
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    
+    # User settings (non-root)
+    user: flowstate
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Command override example (commented out)
+    # command: analyze "https://youtube.com/watch?v=VIDEO_ID" --quality high
+
+  # Development viewer service
+  viewer:
+    image: python:3.11-slim
+    container_name: flowstate-viewer
+    working_dir: /app
+    
+    volumes:
+      - ./viewer:/app:ro
+      - ./data/output:/app/output:ro
+    
+    ports:
+      - "8080:8080"
+    
+    environment:
+      - PYTHONUNBUFFERED=1
+    
+    command: python /app/dev_server.py --port 8080 --directory /app/output/viewer
+    
+    depends_on:
+      - flowstate
+    
+    profiles:
+      - dev
+
+# Named volumes for persistence
+volumes:
+  flowstate-cache:
+    driver: local
+
+# Networks (using default bridge)
+networks:
+  default:
+    driver: bridge

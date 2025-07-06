@@ -11,6 +11,8 @@ dist/
 venv/
 env/
 .env
+.claude
+logs
 
 # IDE-specific files
 .vscode/

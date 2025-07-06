@@ -52,7 +52,8 @@ class YouTubeDownloader:
                 'youtube': {
                     'skip': ['dash_manifest', 'hls_playlist']
                 }
-            }
+            },
+            'cookiefile': str(settings.yt_dlp_cookiefile) if settings.yt_dlp_cookiefile else None
         }
 
         video_info = None

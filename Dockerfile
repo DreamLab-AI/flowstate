@@ -2,7 +2,7 @@
 # Optimized for size and build speed
 
 # Stage 1: Python dependencies builder
-FROM python:3.11-slim as python-builder
+FROM tensorflow/tensorflow:latest-gpu AS python-builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -10,13 +10,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+# Add user bin to PATH
+ENV PATH="/root/.local/bin:${PATH}"
+
 # Copy requirements and install Python packages
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Final runtime image
-FROM python:3.11-slim
+FROM tensorflow/tensorflow:latest-gpu
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -41,6 +44,7 @@ COPY --from=python-builder /root/.local /home/flowstate/.local
 # Copy application code
 WORKDIR /app
 COPY src/ ./src/
+COPY src/viewer/ ./src/viewer/
 COPY pyproject.toml .
 
 # Set ownership of both /app and /home/flowstate/.local
@@ -60,16 +64,23 @@ ENV PYTHONPATH=/app:$PYTHONPATH
 ENV PYTHONUNBUFFERED=1
 ENV FLOWSTATE_TEMP_DIR=/tmp/flowstate
 ENV FLOWSTATE_OUTPUT_DIR=/app/output
+ENV FLOWSTATE_LOG_DIR=/app/logs
+ENV FLOWSTATE_CACHE_DIR=/tmp/flowstate/cache
+ENV OPENCV_VIDEOIO_PRIORITY_FFMPEG=1
 
 # Create necessary directories
-RUN mkdir -p /tmp/flowstate /app/output
+RUN mkdir -p /tmp/flowstate /app/output /app/logs
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import mediapipe; print('OK')" || exit 1
+# Health check - verify all critical components
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import mediapipe, cv2, numpy; import src.core.pose_analyzer; print('OK')" || exit 1
+
+# Copy entrypoint script
+COPY --chown=flowstate:flowstate docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Entry point
-ENTRYPOINT ["flowstate"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Default command (can be overridden)
 CMD ["--help"]
