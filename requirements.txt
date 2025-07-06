@@ -1,0 +1,14 @@
+click==8.1.7
+pydantic==2.7.1
+pydantic-settings==2.2.1
+python-dotenv==1.0.0
+yt-dlp
+opencv-python==4.9.0.80
+numpy==1.26.4
+mediapipe==0.10.21
+tensorflow==2.19.0
+PyGithub==2.3.0
+requests==2.31.0
+rich==13.7.1
+tqdm==4.66.2
+colorama==0.4.6

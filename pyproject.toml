@@ -1,0 +1,33 @@
+[project]
+name = "flowstate-cli"
+version = "2.0.0"
+description = "Analyze Tai Chi videos and publish 3D visualizations."
+authors = [
+    { name = "FlowState Team", email = "team@flowstate.com" }
+]
+dependencies = [
+    "click",
+    "pydantic",
+    "pydantic-settings",
+    "python-dotenv",
+    "yt-dlp",
+    "opencv-python",
+    "numpy",
+    "mediapipe",
+    "tensorflow",
+    "PyGithub",
+    "requests",
+    "rich",
+    "tqdm",
+    "colorama",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = { text = "MIT" }
+
+[project.scripts]
+flowstate = "src.cli.app:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
