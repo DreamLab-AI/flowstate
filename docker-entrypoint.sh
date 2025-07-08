@@ -90,6 +90,11 @@ handle_special_commands() {
             cd "${FLOWSTATE_OUTPUT_DIR}/viewer" || exit 1
             exec python /app/viewer/dev_server.py --port 8080
             ;;
+        "server"|"serve")
+            log_info "Starting FlowState web server..."
+            shift  # Remove the 'server' command
+            exec python -m src.core.server "$@"
+            ;;
     esac
 }
 

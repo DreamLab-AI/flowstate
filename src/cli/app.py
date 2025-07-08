@@ -24,6 +24,7 @@ from ..core.analyzer import PoseAnalyzer
 from ..core.publisher import GitHubPublisher
 from ..viewer.builder import ViewerBuilder
 from ..utils.validators import validate_youtube_url, validate_github_token
+from ..core.server import FlowStateServer
 
 # Initialize colorama for cross-platform color support
 init(autoreset=True)
@@ -215,13 +216,24 @@ class FlowStateCLI:
     help='Skip GitHub publishing step'
 )
 @click.option(
+    '--serve',
+    is_flag=True,
+    help='Start local web server to host visualization'
+)
+@click.option(
+    '--serve-port',
+    type=int,
+    default=8080,
+    help='Port for the web server (default: 8080)'
+)
+@click.option(
     '--debug',
     is_flag=True,
     help='Enable debug mode'
 )
 @click.version_option(version=settings.version)
 def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path],
-         skip_publish: bool, debug: bool):
+         skip_publish: bool, serve: bool, serve_port: int, debug: bool):
     """
     FlowState-CLI: Transform Tai Chi videos into interactive 3D analyses.
 
@@ -241,8 +253,15 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
     cli = FlowStateCLI()
     cli.print_banner()
 
-    # Get YouTube URL if not provided
-    if not url:
+    input_file_path = Path("input.mp4")
+    video_path = None
+    video_info = None
+
+    if input_file_path.exists() and input_file_path.is_file():
+        console.print(f"[green]✔ Found local video: {input_file_path}[/green]")
+        video_path, video_info = cli.downloader.process_local_video(input_file_path)
+    elif url:
+        # Get YouTube URL if not provided
         console.print("[green]Welcome to FlowState-CLI![/green]")
         console.print("Please enter the YouTube URL of the Tai Chi video:\n")
 
@@ -256,21 +275,107 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
                 console.print(f"[red]✖ {e.message}[/red]")
                 console.print("[dim]Example: https://youtube.com/watch?v=VIDEO_ID[/dim]\n")
 
-    # Run analysis
-    viewer_dir, video_info = cli.run_analysis(url)
+        # Run analysis
+        video_path, video_info = cli.downloader.download_video(url)
+    else:
+        console.print("[red]✖ No video source provided. Please provide a YouTube URL or ensure 'input.mp4' exists.[/red]")
+        return 1
+
+    if not video_path or not video_info:
+        console.print("\n[red]Video processing failed. Exiting.[/red]")
+        return 1
+
+    # Step 2: Extract frames
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+            task = progress.add_task("[cyan]Extracting frames...", total=None)
+            frames_dir = cli.downloader.extract_frames(video_path)
+            progress.update(task, completed=100)
+            console.print(f"[green]✔ Frames extracted successfully[/green]")
+
+            # Step 3: Analyze poses
+            task = progress.add_task("[cyan]Analyzing movement...", total=None)
+            pose_data = cli.analyzer.analyze_video(frames_dir)
+            progress.update(task, completed=100)
+
+            # Display analysis results
+            overall_flow = pose_data['overall_scores']['flow']
+            console.print(f"\n[green]✔ Analysis complete![/green]")
+            console.print(f"[yellow]Overall Flow Score: {overall_flow:.1f}%[/yellow]")
+            console.print(f"[dim]Detection Rate: {pose_data['detection_rate']:.1%}[/dim]")
+
+            # Step 4: Generate viewer
+            task = progress.add_task("[cyan]Generating 3D viewer...", total=None)
+            viewer_dir = cli.viewer_builder.generate_viewer(pose_data, video_info)
+            progress.update(task, completed=100)
+            console.print(f"[green]✔ 3D viewer generated[/green]")
+
+    except FlowStateError as e:
+        console.print(f"[red]✖ {e.message}[/red]")
+        if settings.debug and e.details:
+            console.print(f"[dim]Details: {e.details}[/dim]")
+        return 1
+    except Exception as e:
+        console.print(f"[red]✖ Unexpected error: {str(e)}[/red]")
+        if settings.debug:
+            console.print_exception()
+        return 1
+    finally:
+        if hasattr(cli, 'downloader'):
+            cli.downloader.cleanup()
+
+    viewer_dir, video_info = None, None # Reset for clarity, actual values come from above
+    # Re-assign viewer_dir and video_info from the successful path
+    if 'viewer_dir' in locals() and 'video_info' in locals():
+        pass # Already assigned in the try block
+    else:
+        console.print("\n[red]Analysis failed. Please try with a different video.[/red]")
+        return 1
 
     if not viewer_dir:
         console.print("\n[red]Analysis failed. Please try with a different video.[/red]")
         return 1
 
     # Publishing step
-    if not skip_publish:
+    if not skip_publish and not serve:
         console.print("\n[green]Analysis complete![/green]")
         if click.confirm("Would you like to publish to GitHub Pages?", default=True):
             success = cli.github_deployment_wizard(viewer_dir, video_info)
-            return 0 if success else 1
+            if success:
+                return 0
+            else:
+                # Offer to start local server as fallback
+                console.print("\n[yellow]GitHub Pages deployment failed.[/yellow]")
+                if click.confirm("Would you like to start a local web server instead?", default=True):
+                    serve = True
+                else:
+                    return 1
 
-    console.print(f"\n[yellow]Analysis saved to: {viewer_dir}[/yellow]")
+    # Start local web server if requested or as fallback
+    if serve:
+        console.print(f"\n[yellow]Starting web server to host visualization...[/yellow]")
+        server = FlowStateServer(port=serve_port, directory=viewer_dir)
+        
+        if server.start(daemon=False):
+            console.print(f"\n[green]✔ Web server started successfully![/green]")
+            console.print(f"[cyan]View your visualization at: http://localhost:{serve_port}[/cyan]")
+            console.print("\n[dim]Press Ctrl+C to stop the server[/dim]\n")
+            
+            try:
+                server.wait()
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Shutting down server...[/yellow]")
+                server.stop()
+        else:
+            console.print("[red]✖ Failed to start web server[/red]")
+            return 1
+    else:
+        console.print(f"\n[yellow]Analysis saved to: {viewer_dir}[/yellow]")
+        
     return 0
 
 

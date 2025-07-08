@@ -1,0 +1,132 @@
+{
+  "name": "FlowState Web Server Fallback Implementation",
+  "description": "Upgrade FlowState to ensure visualization hosting continues when GitHub Pages fails",
+  "version": "2.0.0",
+  "agents": [
+    {
+      "id": "analyzer",
+      "name": "Code Analyzer",
+      "role": "Analyze existing codebase and identify integration points",
+      "capabilities": ["code_analysis", "dependency_tracking", "architecture_review"],
+      "tools": ["grep", "find", "ast_parser"],
+      "tasks": [
+        "Analyze the publisher module for GitHub Pages failure scenarios",
+        "Review the current error handling flow",
+        "Identify integration points for fallback mechanism"
+      ]
+    },
+    {
+      "id": "server-developer",
+      "name": "Server Module Developer",
+      "role": "Implement robust web server module with production features",
+      "capabilities": ["python_development", "http_server", "error_handling"],
+      "tools": ["python", "http.server", "threading"],
+      "tasks": [
+        "Implement FlowStateServer class with host network support",
+        "Add proper error handling and logging",
+        "Ensure server can bind to all interfaces (0.0.0.0)",
+        "Add health check endpoints"
+      ]
+    },
+    {
+      "id": "docker-engineer",
+      "name": "Docker Configuration Engineer",
+      "role": "Update Docker configuration for host network support",
+      "capabilities": ["docker", "networking", "container_orchestration"],
+      "tools": ["docker", "docker-compose"],
+      "tasks": [
+        "Update docker-compose.yml with web-server service",
+        "Configure host network mode for production profile",
+        "Ensure proper volume mounts for serving content",
+        "Add health checks to container configuration"
+      ]
+    },
+    {
+      "id": "cli-integrator",
+      "name": "CLI Integration Specialist",
+      "role": "Integrate web server fallback into CLI workflow",
+      "capabilities": ["cli_development", "user_experience", "workflow_design"],
+      "tools": ["click", "python"],
+      "tasks": [
+        "Add --serve flag to CLI",
+        "Implement automatic fallback when GitHub Pages fails",
+        "Add user prompts for server startup",
+        "Ensure graceful shutdown handling"
+      ]
+    },
+    {
+      "id": "tester",
+      "name": "Integration Tester",
+      "role": "Test the complete implementation",
+      "capabilities": ["testing", "validation", "documentation"],
+      "tools": ["pytest", "curl", "docker"],
+      "tasks": [
+        "Test server startup and shutdown",
+        "Verify host network accessibility",
+        "Test GitHub Pages failure fallback flow",
+        "Validate container health checks"
+      ]
+    }
+  ],
+  "workflow": {
+    "phases": [
+      {
+        "name": "Analysis",
+        "agents": ["analyzer"],
+        "duration": "10m",
+        "outputs": ["integration_points.md", "failure_scenarios.md"]
+      },
+      {
+        "name": "Implementation",
+        "agents": ["server-developer", "docker-engineer", "cli-integrator"],
+        "duration": "30m",
+        "parallel": true,
+        "outputs": ["server.py", "docker-compose.yml", "app.py"]
+      },
+      {
+        "name": "Integration",
+        "agents": ["cli-integrator"],
+        "duration": "15m",
+        "dependencies": ["Implementation"],
+        "outputs": ["integrated_cli.py"]
+      },
+      {
+        "name": "Testing",
+        "agents": ["tester"],
+        "duration": "15m",
+        "dependencies": ["Integration"],
+        "outputs": ["test_report.md", "validation_results.json"]
+      }
+    ]
+  },
+  "communication": {
+    "protocol": "async_message_passing",
+    "channels": [
+      {
+        "name": "implementation_updates",
+        "subscribers": ["server-developer", "docker-engineer", "cli-integrator"]
+      },
+      {
+        "name": "test_results",
+        "subscribers": ["all"]
+      }
+    ]
+  },
+  "success_criteria": [
+    "Web server starts successfully on host network",
+    "Visualization is accessible from host machine",
+    "GitHub Pages failure triggers automatic fallback",
+    "Container continues running when GitHub Pages is unavailable",
+    "All tests pass with 100% coverage of critical paths"
+  ],
+  "fallback_strategy": {
+    "primary": "GitHub Pages deployment",
+    "fallback": "Local web server on host network",
+    "triggers": [
+      "GitHub API authentication failure",
+      "GitHub Pages enablement failure",
+      "Network connectivity issues",
+      "User preference (--serve flag)"
+    ]
+  }
+}

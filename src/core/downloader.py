@@ -21,6 +21,34 @@ class YouTubeDownloader:
     def __init__(self):
         self.temp_video_path: Optional[Path] = None
 
+    def process_local_video(self, video_path: Path) -> Tuple[Path, Dict[str, Any]]:
+        """
+        Processes a local video file, returning its path and a dummy info dictionary.
+
+        Args:
+            video_path: Path to the local video file.
+
+        Returns:
+            A tuple containing the path to the video and its info.
+
+        Raises:
+            VideoDownloadError: If the video file does not exist or is not a file.
+        """
+        if not video_path.is_file():
+            raise VideoDownloadError(f"Local video file not found: {video_path}")
+
+        # Create a dummy video_info dictionary for local files
+        video_info = {
+            'id': video_path.stem,
+            'title': video_path.stem,
+            'ext': video_path.suffix.lstrip('.'),
+            'fulltitle': video_path.name,
+            'webpage_url': f"file://{video_path.absolute()}",
+            'duration': None, # Can be extracted with opencv if needed
+        }
+        self.temp_video_path = video_path # Set for cleanup if needed
+        return video_path, video_info
+
     def download_video(self, url: str) -> Tuple[Path, Dict[str, Any]]:
         """
         Downloads a YouTube video.

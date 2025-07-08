@@ -90,6 +90,45 @@ services:
     profiles:
       - dev
 
+  # Production web server service
+  web-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flowstate-cli:latest
+    container_name: flowstate-web-server
+    
+    volumes:
+      - ./data/output:/app/output:ro
+      - ./logs:/app/logs:rw
+    
+    ports:
+      - "8080:8080"
+    
+    environment:
+      - FLOWSTATE_OUTPUT_DIR=/app/output
+      - FLOWSTATE_LOG_DIR=/app/logs
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    
+    # Use host networking for better accessibility
+    network_mode: host
+    
+    # Run as non-root user
+    user: flowstate
+    
+    # Auto-restart for reliability
+    restart: unless-stopped
+    
+    # Start the web server
+    command: server --port 8080 --host 0.0.0.0
+    
+    depends_on:
+      - flowstate
+    
+    profiles:
+      - production
+
 # Named volumes for persistence
 volumes:
   flowstate-cache:
