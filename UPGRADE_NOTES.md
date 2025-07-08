@@ -6,6 +6,12 @@ This upgrade adds a fallback web server to the FlowState project that ensures vi
 
 ## Key Features Added
 
+### 0. **Local Video Support (input.mp4)**
+- Automatic detection of `input.mp4` when no URL provided
+- Proper Docker volume mapping for local files
+- Enhanced metadata extraction for local videos
+- Seamless integration with existing workflow
+
 ### 1. **Production Web Server Module** (`src/core/server.py`)
 - Robust HTTP server with CORS support
 - Binds to all interfaces (0.0.0.0) for network accessibility
@@ -38,6 +44,9 @@ flowstate analyze "https://youtube.com/watch?v=VIDEO_ID" --serve
 
 # Custom port
 flowstate analyze "https://youtube.com/watch?v=VIDEO_ID" --serve --serve-port 3000
+
+# Analyze local input.mp4 file and serve
+flowstate analyze --serve  # Will use input.mp4 if present
 ```
 
 ### 2. Docker Compose Production Mode
@@ -53,7 +62,7 @@ docker-compose --profile production up web-server
 ### 3. Docker Direct Server Mode
 ```bash
 # Run container in server mode
-docker run -p 8080:8080 --network host flowstate-cli:latest server
+docker run -p 8080:8080 --network host flowstate:1.0 server
 ```
 
 ### 4. Fallback Scenario
@@ -114,7 +123,7 @@ Ensure your firewall allows incoming connections on the chosen port.
 ### Docker Host Network Issues
 On some systems, use bridge network with port mapping:
 ```bash
-docker run -p 8080:8080 flowstate-cli:latest server
+docker run -p 8080:8080 flowstate:1.0 server
 ```
 
 ## Benefits

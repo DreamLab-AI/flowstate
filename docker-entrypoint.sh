@@ -133,6 +133,12 @@ main() {
         exec flowstate --help
     fi
     
+    # Handle 'analyze' as a compatibility wrapper
+    if [ "$1" = "analyze" ]; then
+        log_info "Removing 'analyze' command for compatibility..."
+        shift  # Remove 'analyze' from arguments
+    fi
+    
     # Log the command being executed
     log_info "Executing: flowstate $*"
     

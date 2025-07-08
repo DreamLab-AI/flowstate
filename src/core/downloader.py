@@ -23,7 +23,7 @@ class YouTubeDownloader:
 
     def process_local_video(self, video_path: Path) -> Tuple[Path, Dict[str, Any]]:
         """
-        Processes a local video file, returning its path and a dummy info dictionary.
+        Processes a local video file, returning its path and a metadata dictionary.
 
         Args:
             video_path: Path to the local video file.
@@ -37,17 +37,43 @@ class YouTubeDownloader:
         if not video_path.is_file():
             raise VideoDownloadError(f"Local video file not found: {video_path}")
 
-        # Create a dummy video_info dictionary for local files
+        # Extract video metadata using OpenCV
+        cap = cv2.VideoCapture(str(video_path))
+        try:
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration = frame_count / fps if fps > 0 else None
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        finally:
+            cap.release()
+
+        # Create a comprehensive video_info dictionary for local files
         video_info = {
             'id': video_path.stem,
-            'title': video_path.stem,
+            'title': f"Local Video: {video_path.stem}",
             'ext': video_path.suffix.lstrip('.'),
             'fulltitle': video_path.name,
             'webpage_url': f"file://{video_path.absolute()}",
-            'duration': None, # Can be extracted with opencv if needed
+            'duration': duration,
+            'fps': fps,
+            'width': width,
+            'height': height,
+            'uploader': 'Local File',
+            'upload_date': 'N/A',
+            'description': f'Local video file: {video_path.name}',
+            'thumbnail': None,
         }
-        self.temp_video_path = video_path # Set for cleanup if needed
-        return video_path, video_info
+        
+        # Copy to temp directory if needed (for Docker compatibility)
+        temp_path = settings.temp_dir / video_path.name
+        if not temp_path.exists():
+            shutil.copy2(video_path, temp_path)
+            self.temp_video_path = temp_path
+        else:
+            self.temp_video_path = video_path
+            
+        return self.temp_video_path, video_info
 
     def download_video(self, url: str) -> Tuple[Path, Dict[str, Any]]:
         """

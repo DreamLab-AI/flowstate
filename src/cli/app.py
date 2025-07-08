@@ -253,15 +253,25 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
     cli = FlowStateCLI()
     cli.print_banner()
 
+    # Check for local input file first
     input_file_path = Path("input.mp4")
     video_path = None
     video_info = None
 
-    if input_file_path.exists() and input_file_path.is_file():
+    if not url and input_file_path.exists() and input_file_path.is_file():
         console.print(f"[green]✔ Found local video: {input_file_path}[/green]")
         video_path, video_info = cli.downloader.process_local_video(input_file_path)
     elif url:
-        # Get YouTube URL if not provided
+        # Process YouTube URL
+        try:
+            video_id = validate_youtube_url(url)
+            video_path, video_info = cli.downloader.download_video(url)
+        except InvalidURLError as e:
+            console.print(f"[red]✖ {e.message}[/red]")
+            console.print("[dim]Example: https://youtube.com/watch?v=VIDEO_ID[/dim]\n")
+            return 1
+    else:
+        # No URL provided and no input.mp4 found - ask for URL
         console.print("[green]Welcome to FlowState-CLI![/green]")
         console.print("Please enter the YouTube URL of the Tai Chi video:\n")
 
@@ -270,16 +280,11 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
 
             try:
                 video_id = validate_youtube_url(url)
+                video_path, video_info = cli.downloader.download_video(url)
                 break
             except InvalidURLError as e:
                 console.print(f"[red]✖ {e.message}[/red]")
                 console.print("[dim]Example: https://youtube.com/watch?v=VIDEO_ID[/dim]\n")
-
-        # Run analysis
-        video_path, video_info = cli.downloader.download_video(url)
-    else:
-        console.print("[red]✖ No video source provided. Please provide a YouTube URL or ensure 'input.mp4' exists.[/red]")
-        return 1
 
     if not video_path or not video_info:
         console.print("\n[red]Video processing failed. Exiting.[/red]")

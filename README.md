@@ -48,6 +48,22 @@ docker run --rm -it flowstate:1.0 --url "YOUR_YOUTUBE_URL" --skip-publish
 
 Replace `"YOUR_YOUTUBE_URL"` with the actual YouTube video link. The `--skip-publish` flag will prevent the tool from attempting to publish to GitHub Pages. The output will be saved in the `./output` directory.
 
+### Analyze a Local Video File (input.mp4)
+
+FlowState-CLI can also analyze local video files. If no URL is provided, it will automatically look for `input.mp4` in the current directory:
+
+```bash
+# Using Docker - mount your video as input.mp4
+docker run --rm -it -v /path/to/your/video.mp4:/app/input.mp4:ro flowstate:1.0 --skip-publish
+
+# Or using docker-compose (place input.mp4 in the project root)
+docker-compose run flowstate analyze --skip-publish
+```
+
+The tool will automatically detect and process `input.mp4` when:
+1. No YouTube URL is provided via the `--url` flag
+2. The file `input.mp4` exists in the working directory (or is mounted in Docker)
+
 ### Analyze and Publish to GitHub Pages
 
 To analyze a YouTube video and publish the interactive 3D visualization to GitHub Pages:

@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         - BUILDKIT_INLINE_CACHE=1
-    image: flowstate-cli:latest
+    image: flowstate:1.0
     container_name: flowstate-analyzer
     
     # Resource limits
@@ -26,6 +26,9 @@ services:
       - ./data/input:/data/input:ro
       - ./data/output:/app/output:rw
       - ./logs:/app/logs:rw
+      
+      # Mount input.mp4 if it exists in the host directory
+      - ./input.mp4:/app/input.mp4:ro
       
       # Cache directory for faster processing
       - flowstate-cache:/tmp/flowstate/cache
@@ -95,12 +98,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: flowstate-cli:latest
+    image: flowstate:1.0
     container_name: flowstate-web-server
     
     volumes:
       - ./data/output:/app/output:ro
       - ./logs:/app/logs:rw
+      - ./input.mp4:/app/input.mp4:ro
     
     ports:
       - "8080:8080"
