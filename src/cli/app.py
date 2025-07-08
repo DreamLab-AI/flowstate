@@ -330,18 +330,16 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
             console.print_exception()
         return 1
     finally:
+        # Explicitly close the analyzer to release resources
+        if hasattr(cli, 'analyzer'):
+            cli.analyzer.close()
+
         if hasattr(cli, 'downloader'):
             cli.downloader.cleanup()
 
-    viewer_dir, video_info = None, None # Reset for clarity, actual values come from above
-    # Re-assign viewer_dir and video_info from the successful path
-    if 'viewer_dir' in locals() and 'video_info' in locals():
-        pass # Already assigned in the try block
-    else:
-        console.print("\n[red]Analysis failed. Please try with a different video.[/red]")
-        return 1
-
-    if not viewer_dir:
+    # The `try...except` block above handles failures. If we are here,
+    # the analysis was successful and `viewer_dir` is set.
+    if 'viewer_dir' not in locals() or not viewer_dir:
         console.print("\n[red]Analysis failed. Please try with a different video.[/red]")
         return 1
 
@@ -364,12 +362,12 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
     if serve:
         console.print(f"\n[yellow]Starting web server to host visualization...[/yellow]")
         server = FlowStateServer(port=serve_port, directory=viewer_dir)
-        
+
         if server.start(daemon=False):
             console.print(f"\n[green]✔ Web server started successfully![/green]")
             console.print(f"[cyan]View your visualization at: http://localhost:{serve_port}[/cyan]")
             console.print("\n[dim]Press Ctrl+C to stop the server[/dim]\n")
-            
+
             try:
                 server.wait()
             except KeyboardInterrupt:
@@ -380,7 +378,7 @@ def main(url: Optional[str], output: Optional[Path], cookie_file: Optional[Path]
             return 1
     else:
         console.print(f"\n[yellow]Analysis saved to: {viewer_dir}[/yellow]")
-        
+
     return 0
 
 

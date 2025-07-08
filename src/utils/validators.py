@@ -9,35 +9,18 @@ from ..core.exceptions import InvalidURLError, GitHubAuthError
 def validate_youtube_url(url: str) -> str:
     """
     Validates if a given string is a valid YouTube video URL and extracts the video ID.
-
-    Args:
-        url: The URL string to validate.
-
-    Returns:
-        The extracted YouTube video ID.
-
-    Raises:
-        InvalidURLError: If the URL is not a valid YouTube video URL.
     """
+    # Regex to find video ID from various YouTube URL formats
     youtube_regex = (
-        r'(https?://)?(www\.)?'
-        '(youtube|youtu|youtube-nocookie)\.(com|be)/'
-        '(watch\?v=|embed/|v/|.+\?v=|playlist\?list=|e/|f/|'
-        'videos/|user/\S+|channel/\S+|'
-        'ytscreeningroom\?v=|yt.be/|'
-        'vi/|user/.+/videos/|'
-        'embed/videoseries\?list=)'
-        '([^"&?\/\s]{11})'
+        r'(?:https?:\/\/)?(?:www\.)?'
+        '(?:youtube\.com|youtu\.be)\/'
+        '(?:watch\?v=|embed\/|v\/|.+\?v=)?([^"&?\/ ]{11})'
     )
     match = re.search(youtube_regex, url)
-    if not match:
-        raise InvalidURLError(f"Invalid YouTube URL format: {url}")
+    if not match or not match.group(1):
+        raise InvalidURLError(f"Could not extract a valid YouTube video ID from URL: {url}")
 
-    video_id = match.group(4) # The 11-character video ID
-    if not video_id:
-        raise InvalidURLError(f"Could not extract video ID from URL: {url}")
-
-    return video_id
+    return match.group(1)
 
 
 def validate_github_token(token: str) -> bool:

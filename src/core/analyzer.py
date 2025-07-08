@@ -29,6 +29,7 @@ class PoseAnalyzer:
         )
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
+        self._closed = False
 
     def analyze_video(self, frames_dir: Path) -> Dict[str, Any]:
         """
@@ -130,7 +131,19 @@ class PoseAnalyzer:
             "energy": min(100.0, energy_score * (100/(1 - settings.analysis_flow_weight - settings.analysis_balance_weight - settings.analysis_smoothness_weight)))
         }
 
-    def __del__(self):
-        """Release MediaPipe resources."""
-        if hasattr(self, 'pose_detector'):
+    def close(self):
+        """
+        Explicitly release MediaPipe resources.
+        This method is idempotent.
+        """
+        if hasattr(self, '_closed') and self._closed:
+            return
+
+        if hasattr(self, 'pose_detector') and self.pose_detector:
             self.pose_detector.close()
+
+        self._closed = True
+
+    def __del__(self):
+        """Fallback to release MediaPipe resources."""
+        self.close()
