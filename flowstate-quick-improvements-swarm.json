@@ -1,0 +1,200 @@
+{
+  "name": "FlowState Quick Improvements Swarm",
+  "description": "Focused swarm for immediate high-impact improvements",
+  "version": "1.0.0",
+  "objective": "Quickly improve FlowState with critical fixes and enhancements",
+  "configuration": {
+    "max_duration": "2h",
+    "priority_mode": "high_impact_first",
+    "parallel_execution": true
+  },
+  "agents": [
+    {
+      "id": "error-handler",
+      "name": "Error Handling Specialist",
+      "focus": "Improve error handling and user feedback",
+      "tasks": [
+        {
+          "name": "Enhance error messages",
+          "files": ["src/core/exceptions.py", "src/cli/app.py"],
+          "actions": [
+            "Add context-specific error messages",
+            "Include troubleshooting suggestions",
+            "Implement error recovery mechanisms"
+          ]
+        },
+        {
+          "name": "Add retry logic",
+          "files": ["src/core/downloader.py", "src/core/publisher.py"],
+          "actions": [
+            "Implement exponential backoff for network requests",
+            "Add configurable retry limits",
+            "Handle transient failures gracefully"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "docker-optimizer",
+      "name": "Docker Optimization Expert",
+      "focus": "Optimize Docker configuration and build process",
+      "tasks": [
+        {
+          "name": "Optimize Dockerfile",
+          "files": ["Dockerfile"],
+          "actions": [
+            "Implement better layer caching",
+            "Reduce image size with multi-stage builds",
+            "Add .dockerignore for faster builds",
+            "Optimize dependency installation order"
+          ]
+        },
+        {
+          "name": "Improve container startup",
+          "files": ["docker-entrypoint.sh"],
+          "actions": [
+            "Add pre-flight checks",
+            "Implement graceful shutdown",
+            "Add container health monitoring"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cli-enhancer",
+      "name": "CLI User Experience Expert",
+      "focus": "Improve CLI usability and features",
+      "tasks": [
+        {
+          "name": "Add progress indicators",
+          "files": ["src/cli/app.py", "src/core/analyzer.py"],
+          "actions": [
+            "Implement detailed progress bars",
+            "Add ETA calculations",
+            "Show current processing step"
+          ]
+        },
+        {
+          "name": "Enhance input handling",
+          "files": ["src/cli/app.py"],
+          "actions": [
+            "Support multiple video formats",
+            "Add batch processing from file list",
+            "Implement URL validation improvements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "performance-tuner",
+      "name": "Performance Optimization Specialist",
+      "focus": "Quick performance wins",
+      "tasks": [
+        {
+          "name": "Optimize frame extraction",
+          "files": ["src/core/downloader.py"],
+          "actions": [
+            "Implement parallel frame extraction",
+            "Add frame skipping for faster processing",
+            "Optimize memory usage during extraction"
+          ]
+        },
+        {
+          "name": "Cache implementation",
+          "files": ["src/core/analyzer.py", "src/core/config.py"],
+          "actions": [
+            "Add pose detection result caching",
+            "Implement smart cache invalidation",
+            "Cache processed frames"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "doc-writer",
+      "name": "Documentation Specialist",
+      "focus": "Essential documentation updates",
+      "tasks": [
+        {
+          "name": "Create troubleshooting guide",
+          "files": ["docs/TROUBLESHOOTING.md"],
+          "actions": [
+            "Document common issues and solutions",
+            "Add FAQ section",
+            "Include diagnostic commands"
+          ]
+        },
+        {
+          "name": "Improve API documentation",
+          "files": ["docs/API.md", "src/core/*.py"],
+          "actions": [
+            "Add docstrings to all public methods",
+            "Create usage examples",
+            "Document configuration options"
+          ]
+        }
+      ]
+    }
+  ],
+  "workflow": {
+    "phases": [
+      {
+        "name": "Analysis",
+        "duration": "20m",
+        "parallel": true,
+        "agents": ["all"],
+        "output": "analysis_report.md"
+      },
+      {
+        "name": "Implementation",
+        "duration": "1h",
+        "parallel": true,
+        "agents": ["all"],
+        "output": "patches/"
+      },
+      {
+        "name": "Testing",
+        "duration": "30m",
+        "parallel": false,
+        "agents": ["all"],
+        "output": "test_results.md"
+      },
+      {
+        "name": "Documentation",
+        "duration": "10m",
+        "parallel": true,
+        "agents": ["doc-writer"],
+        "output": "docs/"
+      }
+    ]
+  },
+  "deliverables": [
+    {
+      "name": "Enhanced Error Handling",
+      "files": ["src/core/exceptions.py", "error_handling.patch"]
+    },
+    {
+      "name": "Optimized Docker Setup",
+      "files": ["Dockerfile", ".dockerignore", "docker-entrypoint.sh"]
+    },
+    {
+      "name": "Improved CLI",
+      "files": ["src/cli/app.py", "cli_enhancements.patch"]
+    },
+    {
+      "name": "Performance Improvements",
+      "files": ["performance_optimizations.patch"]
+    },
+    {
+      "name": "Documentation Updates",
+      "files": ["docs/TROUBLESHOOTING.md", "docs/API.md"]
+    }
+  ],
+  "success_criteria": [
+    "All critical errors have helpful messages",
+    "Docker build time reduced by 30%",
+    "CLI provides real-time progress feedback",
+    "Frame extraction 2x faster",
+    "Comprehensive troubleshooting guide created"
+  ]
+}

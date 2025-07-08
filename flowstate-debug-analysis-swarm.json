@@ -1,0 +1,212 @@
+{
+  "name": "FlowState Debug and Analysis Swarm",
+  "description": "Deep debugging and analysis of current issues and potential improvements",
+  "version": "1.0.0",
+  "objective": "Identify and document all issues, bugs, and improvement opportunities",
+  "agents": [
+    {
+      "id": "bug-hunter",
+      "name": "Bug Detection Specialist",
+      "role": "Find and categorize all bugs in the codebase",
+      "tools": ["static_analysis", "dynamic_analysis", "fuzzing"],
+      "tasks": [
+        "Scan for null pointer exceptions",
+        "Identify race conditions",
+        "Find resource leaks",
+        "Detect infinite loops",
+        "Check boundary conditions",
+        "Validate error propagation"
+      ],
+      "focus_areas": [
+        "src/core/analyzer.py",
+        "src/core/downloader.py",
+        "src/core/publisher.py",
+        "src/cli/app.py"
+      ]
+    },
+    {
+      "id": "dependency-analyst",
+      "name": "Dependency and Compatibility Analyst",
+      "role": "Analyze dependencies for issues and updates",
+      "tools": ["pip-audit", "safety", "dependency-check"],
+      "tasks": [
+        "Check for outdated dependencies",
+        "Identify security vulnerabilities in dependencies",
+        "Find dependency conflicts",
+        "Analyze license compatibility",
+        "Check for deprecated package usage",
+        "Validate Python version compatibility"
+      ]
+    },
+    {
+      "id": "edge-case-finder",
+      "name": "Edge Case and Input Validation Expert",
+      "role": "Find edge cases and input validation issues",
+      "tools": ["fuzzer", "property_testing", "boundary_analysis"],
+      "tasks": [
+        "Test with malformed YouTube URLs",
+        "Check handling of very large videos",
+        "Test with corrupted video files",
+        "Validate Unicode handling in titles",
+        "Check network interruption handling",
+        "Test disk space exhaustion scenarios"
+      ]
+    },
+    {
+      "id": "memory-profiler",
+      "name": "Memory and Resource Usage Profiler",
+      "role": "Profile memory usage and find leaks",
+      "tools": ["memory_profiler", "objgraph", "tracemalloc"],
+      "tasks": [
+        "Profile memory usage during video processing",
+        "Identify memory leaks in pose detection",
+        "Check for unclosed file handles",
+        "Analyze temporary file cleanup",
+        "Monitor Docker container resource usage",
+        "Check for circular references"
+      ]
+    },
+    {
+      "id": "integration-tester",
+      "name": "Integration and Compatibility Tester",
+      "role": "Test integration points and external dependencies",
+      "tools": ["integration_tests", "mock_services", "api_testing"],
+      "tasks": [
+        "Test GitHub API integration edge cases",
+        "Validate YouTube download failures",
+        "Check MediaPipe initialization errors",
+        "Test file system permission issues",
+        "Validate Docker volume mounting",
+        "Check cross-platform compatibility"
+      ]
+    }
+  ],
+  "analysis_areas": {
+    "functionality": {
+      "video_processing": [
+        "Frame extraction accuracy",
+        "Pose detection reliability",
+        "Processing speed bottlenecks",
+        "Memory usage patterns"
+      ],
+      "github_integration": [
+        "Authentication flow",
+        "Repository creation edge cases",
+        "File upload reliability",
+        "API rate limiting"
+      ],
+      "web_server": [
+        "Concurrent request handling",
+        "Static file serving performance",
+        "CORS configuration",
+        "Port binding issues"
+      ]
+    },
+    "code_quality": {
+      "maintainability": [
+        "Code duplication",
+        "Complex functions",
+        "Coupling between modules",
+        "Test coverage gaps"
+      ],
+      "reliability": [
+        "Error handling completeness",
+        "Recovery mechanisms",
+        "Logging adequacy",
+        "Configuration validation"
+      ]
+    },
+    "deployment": {
+      "docker": [
+        "Build optimization opportunities",
+        "Layer caching effectiveness",
+        "Security best practices",
+        "Multi-architecture support"
+      ],
+      "scalability": [
+        "Concurrent processing capabilities",
+        "Resource limit configuration",
+        "Horizontal scaling potential",
+        "Caching strategies"
+      ]
+    }
+  },
+  "deliverables": [
+    {
+      "name": "Bug Report",
+      "format": "markdown",
+      "content": [
+        "Critical bugs with reproduction steps",
+        "Security vulnerabilities",
+        "Performance issues",
+        "Usability problems"
+      ]
+    },
+    {
+      "name": "Dependency Audit",
+      "format": "json",
+      "content": [
+        "Outdated packages",
+        "Security vulnerabilities",
+        "License issues",
+        "Upgrade recommendations"
+      ]
+    },
+    {
+      "name": "Performance Profile",
+      "format": "html",
+      "content": [
+        "CPU usage graphs",
+        "Memory allocation timeline",
+        "I/O bottlenecks",
+        "Optimization opportunities"
+      ]
+    },
+    {
+      "name": "Test Coverage Report",
+      "format": "html",
+      "content": [
+        "Line coverage statistics",
+        "Branch coverage",
+        "Uncovered edge cases",
+        "Test quality metrics"
+      ]
+    },
+    {
+      "name": "Architecture Analysis",
+      "format": "markdown + diagrams",
+      "content": [
+        "Current architecture diagram",
+        "Coupling analysis",
+        "Suggested refactoring",
+        "Scalability recommendations"
+      ]
+    }
+  ],
+  "execution_plan": {
+    "phase1": {
+      "name": "Static Analysis",
+      "duration": "30m",
+      "agents": ["bug-hunter", "dependency-analyst"],
+      "outputs": ["static_analysis_report.md", "dependency_audit.json"]
+    },
+    "phase2": {
+      "name": "Dynamic Analysis",
+      "duration": "45m",
+      "agents": ["memory-profiler", "edge-case-finder"],
+      "outputs": ["memory_profile.html", "edge_case_report.md"]
+    },
+    "phase3": {
+      "name": "Integration Testing",
+      "duration": "30m",
+      "agents": ["integration-tester"],
+      "outputs": ["integration_test_results.md"]
+    },
+    "phase4": {
+      "name": "Report Generation",
+      "duration": "15m",
+      "agents": ["all"],
+      "outputs": ["comprehensive_analysis.md", "executive_summary.md"]
+    }
+  }
+}
