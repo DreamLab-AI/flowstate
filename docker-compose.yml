@@ -10,6 +10,13 @@ services:
     image: flowstate:1.0
     container_name: flowstate-analyzer
 
+    # GPU runtime configuration
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=all
+
     # Resource limits
     deploy:
       resources:
@@ -19,6 +26,12 @@ services:
         reservations:
           cpus: '2'
           memory: 2G
+      # GPU reservation
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
 
     # Volumes for persistence and data exchange
     volumes:

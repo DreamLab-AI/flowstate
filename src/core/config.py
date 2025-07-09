@@ -27,9 +27,16 @@ class Settings(BaseSettings):
     yt_dlp_cookiefile: Optional[Path] = None
 
     # Pose detection settings
-    pose_model: Literal["mediapipe", "yolov8"] = "mediapipe"
+    pose_model: Literal["openpose", "yolov8"] = "openpose"
     pose_confidence_threshold: float = 0.7
-    pose_model_complexity: int = 1  # 0, 1, or 2 for MediaPipe
+    pose_model_complexity: int = 1  # 0, 1, or 2 for legacy compatibility
+
+    # OpenPose specific settings
+    openpose_hand_detection: bool = True
+    openpose_face_detection: bool = True
+    openpose_temporal_smoothing: bool = True
+    openpose_interpolation_factor: int = 10  # 10x temporal granularity
+    openpose_smoothing_window: int = 5
 
     # Analysis settings
     analysis_min_frames: int = 30
