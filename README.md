@@ -1,22 +1,27 @@
-# FlowState-CLI
+# FlowState-CLI v2.0
 
-FlowState-CLI is a command-line interface tool designed to analyze Tai Chi videos from YouTube and publish interactive 3D visualizations on GitHub Pages.
+FlowState-CLI is a command-line interface tool designed to analyze Tai Chi and other movement videos from YouTube or local files. It uses an **OpenPose-compatible** pose estimation model with **NVIDIA GPU acceleration** to generate interactive 3D visualizations, which can be viewed locally or published to GitHub Pages.
 
-## Features
+## Key Features
 
-- Download YouTube videos.
-- Extract frames from videos.
-- Analyze human poses and movements using MediaPipe and TensorFlow.
-- Calculate "flow" and "detection rate" scores for Tai Chi movements.
-- Generate interactive 3D visualizations of pose data.
-- Publish analysis results to GitHub Pages.
+- **High-Quality Pose Estimation**: Utilizes a powerful pose detection model (based on YOLOv8-Pose) for accurate analysis.
+- **Full Body Analysis**: Detects keypoints for the entire body, including **hands, feet, and face**.
+- **GPU Accelerated**: Leverages NVIDIA GPUs via Docker for high-performance analysis.
+- **Enhanced Temporal Analysis**: Increases temporal granularity by **10x** and uses **motion interpolation** to produce smooth, fluid animations.
+- **Download Flexibility**: Analyzes videos directly from YouTube or local `*.mp4` files.
+- **Interactive 3D Viewer**: Generates a self-contained web-based viewer with playback controls and motion trails.
+- **Deployment Options**:
+    - Serve the viewer locally for private analysis.
+    - Publish the interactive 3D visualization to GitHub Pages.
 
 ## Installation
 
 ### Prerequisites
 
-- Docker (recommended for easy setup)
-- Git
+- **Git**
+- **Docker**
+- **NVIDIA GPU** with the latest drivers.
+- **NVIDIA Container Toolkit**: Essential for providing GPU access to Docker containers. Follow the [official installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
 
 ### Using Docker (Recommended)
 
@@ -27,131 +32,129 @@ FlowState-CLI is a command-line interface tool designed to analyze Tai Chi video
     ```
 
 2.  **Build the Docker image:**
+    This command builds the `flowstate:2.0-openpose` image, which includes all dependencies.
     ```bash
-    docker build -t flowstate:1.0 .
+    docker build -t flowstate:2.0-openpose .
     ```
 
-3.  **Run the CLI:**
+3.  **Verify the setup:**
+    Run the help command to ensure the image is built correctly.
     ```bash
-    docker run --rm -it flowstate:1.0 --help
+    docker run --rm -it --gpus all flowstate:2.0-openpose --help
     ```
 
 ## Usage
 
-### Analyze a YouTube Video
+### Analyze a YouTube Video (with GPU)
 
-To analyze a YouTube video and generate a local 3D visualization:
-
-```bash
-docker run --rm -it flowstate:1.0 --url "YOUR_YOUTUBE_URL" --skip-publish
-```
-
-Replace `"YOUR_YOUTUBE_URL"` with the actual YouTube video link. The `--skip-publish` flag will prevent the tool from attempting to publish to GitHub Pages. The output will be saved in the `./output` directory.
-
-### Analyze a Local Video File (input.mp4)
-
-FlowState-CLI can also analyze local video files. If no URL is provided, it will automatically look for `input.mp4` in the current directory:
+To analyze a YouTube video and generate a local 3D visualization, run the following command. The `--gpus all` flag is **required** for the analysis to work.
 
 ```bash
-# Using Docker - mount your video as input.mp4
-docker run --rm -it -v /path/to/your/video.mp4:/app/input.mp4:ro flowstate:1.0 --skip-publish
-
-# Or using docker-compose (place input.mp4 in the project root)
-docker-compose run flowstate analyze --skip-publish
+docker run --rm -it --gpus all \
+  flowstate:2.0-openpose \
+  --url "YOUR_YOUTUBE_URL" \
+  --skip-publish
 ```
 
-The tool will automatically detect and process `input.mp4` when:
-1. No YouTube URL is provided via the `--url` flag
-2. The file `input.mp4` exists in the working directory (or is mounted in Docker)
+Replace `"YOUR_YOUTUBE_URL"` with the video link. The `--skip-publish` flag prevents publishing to GitHub Pages. The output will be saved in the `./output` directory on your host machine if you mount it (see below).
 
-### Analyze and Publish to GitHub Pages
+### Analyze a Local Video File (with GPU)
 
-To analyze a YouTube video and publish the interactive 3D visualization to GitHub Pages:
+FlowState-CLI can analyze local `*.mp4` files. Mount your video file to `/app/input.mp4` inside the container.
 
-1.  **Generate a GitHub Personal Access Token (PAT):**
-    - Go to [GitHub Developer Settings](https://github.com/settings/tokens/new?scopes=repo,workflow).
-    - Click "Generate new token" (or "Generate new token (classic)").
-    - Give your token a descriptive name (e.g., `flowstate-cli-deploy`).
-    - **Crucially, grant the `repo` and `workflow` scopes.**
-    - Click "Generate token" and **copy the token immediately**. You won't be able to see it again.
+```bash
+# Mount your video as input.mp4
+docker run --rm -it --gpus all \
+  -v /path/to/your/video.mp4:/app/input.mp4:ro \
+  flowstate:2.0-openpose \
+  --skip-publish
+```
 
-2.  **Set the GitHub Token as an Environment Variable:**
-    It is highly recommended to set your GitHub token as an environment variable to avoid hardcoding it. You can do this by creating a `.env` file in the root of the `flowstate-cli` project:
+### Serving the Viewer Locally
 
+Add the `--serve` flag to host the interactive viewer on a local web server (default port: 8080).
+
+```bash
+docker run --rm -it --gpus all -p 8080:8080 \
+  flowstate:2.0-openpose \
+  --url "YOUR_YOUTUBE_URL" \
+  --serve
+```
+
+### Using Docker Compose (Easiest Method)
+
+Docker Compose is the simplest way to run the application, as it automatically handles GPU runtime configuration and volume mounts.
+
+1.  **Place your local video** (if any) in the project root and name it `input.mp4`.
+2.  **Run the analysis:**
+    ```bash
+    docker-compose run --rm flowstate
+    ```
+    This command will analyze `input.mp4` (if it exists) or you can pass a URL:
+    ```bash
+    docker-compose run --rm flowstate --url "YOUR_YOUTUBE_URL"
+    ```
+
+### Publishing to GitHub Pages
+
+To publish the interactive 3D visualization to GitHub Pages:
+
+1.  **Generate a GitHub Personal Access Token (PAT)** with `repo` and `workflow` scopes.
+2.  **Create a `.env` file** in the project root with your token:
     ```
     FLOWSTATE_GITHUB_TOKEN=your_copied_github_pat
     ```
-
-    Replace `your_copied_github_pat` with the token you generated. Ensure `.env` is in your `.gitignore` file (it should be by default).
-
-3.  **Run the analysis and publish command:**
+3.  **Run the analysis command without `--skip-publish`:**
     ```bash
-    docker run --rm -it flowstate:1.0 --url "YOUR_YOUTUBE_URL"
+    docker run --rm -it --gpus all flowstate:2.0-openpose --url "YOUR_YOUTUBE_URL"
     ```
-
-    The CLI will automatically detect the `FLOWSTATE_GITHUB_TOKEN` environment variable from your `.env` file (if present) and use it for publishing. If the environment variable is not set, it will prompt you to paste the token.
-
-    The tool will create a new GitHub repository (or use an existing one if the name matches) and publish your analysis to GitHub Pages. The URL to your live analysis will be displayed in the console.
+    The CLI will use the token from the `.env` file to create a repository and deploy the viewer.
 
 ### Using a Cookie File for Authentication
 
-Some videos may require you to be logged into a YouTube account. If you encounter issues, you can use the `--cookie-file` option to provide a `cookies.txt` file for authentication.
+For age-restricted or private YouTube videos, provide a `cookies.txt` file.
 
-**Generating a `cookies.txt` File**
-
-You can use a browser extension to export your YouTube cookies in the required Netscape format. Here are a few options:
-
-*   **Get cookies.txt LOCALLY:** [Chrome](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) | [Firefox](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
-*   **EditThisCookie:** [Chrome](https://chrome.google.com/webstore/detail/editthiscookie/fngmhnnpilhplaeedifhccceomclgfbg)
-
-**Instructions:**
-
-1.  Install one of the recommended extensions.
-2.  Navigate to [youtube.com](https://www.youtube.com) and log in to your account.
-3.  Click the extension's icon in your browser's toolbar.
-4.  Export your cookies in **Netscape** format and save the file as `cookies.txt`.
-5.  Use the `--cookie-file` option to provide the path to your `cookies.txt` file when running the application:
+1.  **Generate `cookies.txt`** using a browser extension like "Get cookies.txt LOCALLY".
+2.  **Run with the `--cookie-file` option:**
     ```bash
-    docker run --rm -it -v /path/to/your/cookies.txt:/app/cookies.txt flowstate:1.0 --url "YOUTUBE_URL" --cookie-file /app/cookies.txt
+    docker run --rm -it --gpus all \
+      -v /path/to/your/cookies.txt:/app/cookies.txt:ro \
+      flowstate:2.0-openpose \
+      --url "YOUTUBE_URL" \
+      --cookie-file /app/cookies.txt
     ```
 
 ## Development
 
-### Local Setup (without Docker)
+### Local Setup (Advanced)
 
-1.  **Clone the repository:**
+Running locally without Docker is complex due to the CUDA and PyTorch dependencies. It is recommended to develop inside the container.
+
+1.  **Start an interactive shell** in the container:
     ```bash
-    git clone https://github.com/your-repo/flowstate-cli.git
-    cd flowstate-cli
+    docker run --rm -it --gpus all \
+      -v $(pwd):/app \
+      flowstate:2.0-openpose \
+      shell
     ```
-
-2.  **Create and activate a virtual environment:**
+2.  **Inside the container**, you can run commands directly:
     ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    pip install -e .
-    ```
-
-4.  **Run the CLI:**
-    ```bash
+    # The project code is mounted at /app
+    cd /app
+    # Run the CLI
     flowstate --help
     ```
 
 ### Project Structure
 
 -   `src/cli/app.py`: Main CLI application entry point.
--   `src/core/`: Core logic for video downloading, pose analysis, and GitHub publishing.
--   `src/utils/`: Utility functions (e.g., validators).
--   `src/viewer/`: Logic for building the 3D visualization.
+-   `src/core/analyzer.py`: Core logic for pose analysis using the OpenPose-compatible model.
+-   `src/core/downloader.py`: Handles video downloading.
+-   `src/core/publisher.py`: Manages GitHub publishing.
+-   `src/viewer/`: Contains the logic and templates for the 3D viewer.
 -   `requirements.txt`: Python dependencies.
--   `pyproject.toml`: Project metadata and build configuration.
--   `Dockerfile`: Docker build instructions.
--   `.env`: Environment variables (ignored by Git).
+-   `Dockerfile`: Defines the GPU-enabled Docker image.
+-   `docker-compose.yml`: Defines services for easy development and deployment.
 
 ## Contributing
 

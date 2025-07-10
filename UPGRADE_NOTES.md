@@ -4,6 +4,44 @@
 
 This upgrade adds a fallback web server to the FlowState project that ensures visualizations remain accessible even when GitHub Pages deployment fails. The server runs on the host network, making the visualization accessible from any device on the same network.
 
+---
+
+## v2.0: Migration to OpenPose and GPU Acceleration
+
+This major upgrade replaces the original MediaPipe-based analysis pipeline with a high-performance, GPU-accelerated solution based on a YOLOv8-Pose model. This provides higher accuracy, full-body keypoint detection, and significantly smoother animations.
+
+### Key Changes in v2.0
+
+- **Pose Estimation Engine**: Replaced `MediaPipe` with a `YOLOv8-Pose` model, providing an **OpenPose-compatible** output.
+- **GPU Acceleration**: The entire analysis pipeline now runs on NVIDIA GPUs, requiring the **NVIDIA Container Toolkit**.
+- **Full Body Analysis**: Added support for detecting **hands, feet, and face** keypoints.
+- **Motion Smoothing**: Implemented **10x temporal interpolation** and smoothing algorithms to eliminate jitter and create fluid motion trails.
+- **New Docker Image**: The image is now `flowstate:2.0-openpose` and requires GPU access to run.
+- **Updated Data Structure**: The output `data.js` format has been updated to include separate keypoint arrays for body, hands, and face.
+
+### New Requirements
+
+- NVIDIA GPU
+- NVIDIA Docker Drivers (`nvidia-container-toolkit`)
+
+### New Usage
+
+Running the analysis now requires the `--gpus all` flag with `docker run` or using the pre-configured `docker-compose.yml`.
+
+```bash
+# Example with docker run
+docker run --rm -it --gpus all flowstate:2.0-openpose --url "VIDEO_URL"
+
+# Recommended method with Docker Compose
+docker-compose run --rm flowstate --url "VIDEO_URL"
+```
+
+### Benefits of the Upgrade
+
+1.  **Higher Fidelity**: More accurate keypoint detection.
+2.  **Completeness**: Full-body analysis provides a more holistic view of the movement.
+3.  **Fluid Motion**: Temporal interpolation results in exceptionally smooth animations.
+4.  **Performance**: GPU acceleration significantly speeds up the analysis of long videos.
 ## Key Features Added
 
 ### 0. **Local Video Support (input.mp4)**

@@ -2,7 +2,7 @@
 # Optimized for size and build speed with OpenPose and GPU support
 
 # Stage 1: Python dependencies builder
-FROM nvidia/cuda:12.2-devel-ubuntu22.04 AS python-builder
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04 AS python-builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,7 +31,7 @@ COPY requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Final runtime image
-FROM nvidia/cuda:12.2-runtime-ubuntu22.04
+FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
 # Install runtime dependencies including OpenPose requirements
 RUN apt-get update && apt-get install -y --no-install-recommends \

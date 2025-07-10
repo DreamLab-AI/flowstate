@@ -1,14 +1,15 @@
-# FlowState 3D Viewer
+# FlowState 3D Viewer (v2.0)
 
-Interactive 3D visualization for pose analysis results from FlowState.
+Interactive 3D visualization for pose analysis results from FlowState, now powered by a high-fidelity, OpenPose-compatible data structure.
 
 ## Features
 
-- **Real-time 3D Visualization**: View pose data in an interactive 3D environment
-- **Motion Trails**: Track movement patterns over time
-- **Performance Metrics**: Display flow, balance, smoothness, and energy scores
-- **Playback Controls**: Adjust speed, pause, and navigate through frames
-- **Enhanced Graphics**: Shadows, lighting, and ground plane for better depth perception
+- **Real-time 3D Visualization**: View pose data in an interactive 3D environment.
+- **Full Body Rendering**: Displays keypoints for the **body, hands, and face**.
+- **Motion Trails**: Track movement patterns over time.
+- **Performance Metrics**: Display flow, balance, smoothness, and energy scores.
+- **Playback Controls**: Adjust speed, pause, and navigate through frames.
+- **Enhanced Graphics**: Shadows, lighting, and ground plane for better depth perception.
 
 ## Directory Structure
 
@@ -40,65 +41,72 @@ python dev_server.py --port 3000
 python dev_server.py --directory ../output/viewer
 ```
 
-### Features
+## Data Format (v2.0)
 
-- Automatic sample data generation if no data.js exists
-- CORS support for local development
-- Live reload by refreshing the browser
-- Detailed logging of requests
-
-## Using with Docker
-
-### Development Mode
-
-```bash
-# Start both FlowState and viewer services
-docker-compose --profile dev up
-
-# Access viewer at http://localhost:8080
-```
-
-### Production Mode
-
-```bash
-# Build and run FlowState only
-docker-compose up flowstate
-```
-
-## Viewer Types
-
-### 1. Basic Viewer (`index.html`)
-- Simple 3D skeleton visualization
-- Automatic animation playback
-- Basic information panel
-
-### 2. Enhanced Viewer (`enhanced_viewer.html`)
-- Advanced controls and settings
-- Motion trails visualization
-- Performance statistics
-- Timeline scrubbing
-- Adjustable visual parameters
-
-## Data Format
-
-The viewer expects a `data.js` file with the following structure:
+The viewer expects a `data.js` file with the following **new** structure, which separates body, hand, and face keypoints.
 
 ```javascript
 const flowStateData = {
   poseData: {
-    pose_landmarks: [
-      // Array of frames
-      [
-        // Array of 33 MediaPipe landmarks per frame
-        { x: 0.5, y: 0.5, z: 0.0, visibility: 0.9 },
-        // ... more landmarks
-      ]
+    // Array of pose frames, now with a more detailed structure
+    pose_frames: [
+      {
+        timestamp: 0.033,
+        frame_idx: 1,
+        body_keypoints: [ // 17 COCO keypoints
+          { x: 0.5, y: 0.5, confidence: 0.9, z: 0.0 },
+          // ... 16 more keypoints
+        ],
+        hand_keypoints_left: [ // 21 hand keypoints
+          { x: 0.4, y: 0.6, confidence: 0.8, z: 0.0 },
+          // ... 20 more keypoints
+        ],
+        hand_keypoints_right: [ // 21 hand keypoints
+          { x: 0.6, y: 0.6, confidence: 0.8, z: 0.0 },
+          // ... 20 more keypoints
+        ],
+        face_keypoints: [ // 5 basic face keypoints
+          { x: 0.5, y: 0.4, confidence: 0.95, z: 0.0 },
+          // ... 4 more keypoints
+        ]
+      }
+      // ... more frames
     ],
+    // Stick figure data for drawing connections
+    stick_figure_data: {
+      frames: [
+        {
+          timestamp: 0.033,
+          frame_idx: 1,
+          body_connections: [
+            { from: {x, y}, to: {x, y}, confidence: 0.85 }
+          ],
+          // ... connections for hands
+        }
+      ],
+      keypoint_names: {
+        body: ["nose", "left_eye", ...],
+        hand: ["wrist", "thumb_cmc", ...]
+      },
+      connections: {
+        body: [[0, 1], [0, 2], ...],
+        hand: [[0, 1], [1, 2], ...]
+      }
+    },
     overall_scores: {
       flow: 85.5,
       balance: 78.2,
       smoothness: 92.1,
-      energy: 71.3
+      energy: 71.3,
+      hand_activity: 65.0,
+      posture_stability: 88.0
+    },
+    features: {
+        full_body_detection: true,
+        hand_detection: true,
+        face_detection: true,
+        motion_interpolation: true,
+        temporal_smoothing: true
     }
   },
   videoInfo: {
@@ -121,7 +129,7 @@ const flowStateData = {
 
 ### Modifying Colors
 
-Edit the color schemes in the JavaScript files:
+Edit the color schemes in the JavaScript files. The viewer logic can now assign different colors to body, hands, and face.
 
 ```javascript
 // Joint colors by body part
@@ -131,54 +139,26 @@ this.jointColors = {
     leftArm: 0x45b7d1,
     rightArm: 0x96ceb4,
     leftLeg: 0xf9ca24,
-    rightLeg: 0xf0932b
+    rightLeg: 0xf0932b,
+    hands: 0xffa502 // Orange for hands
 };
 ```
-
-### Adding New Features
-
-1. Modify the HTML to add UI controls
-2. Update the JavaScript to handle new functionality
-3. Test using the development server
-
-## Deployment
-
-### GitHub Pages
-
-1. The viewer is automatically generated in the output directory
-2. Commit and push to your GitHub repository
-3. Enable GitHub Pages for the output branch
-
-### Static Hosting
-
-The viewer is completely static and can be hosted on any web server:
-- Netlify
-- Vercel
-- AWS S3
-- Nginx
-- Apache
 
 ## Troubleshooting
 
 ### Viewer Not Loading
-- Check browser console for errors
-- Ensure `data.js` file exists and is valid
-- Verify all CDN resources are accessible
+- Check the browser console for errors.
+- Ensure `data.js` exists and conforms to the new v2.0 format.
+- Verify all CDN resources are accessible.
 
 ### Performance Issues
-- Reduce trail length in settings
-- Disable shadows for better performance
-- Lower the playback speed
-
-### CORS Errors
-- Use the development server for local testing
-- Ensure proper CORS headers on production server
+- Reduce trail length in settings.
+- Disable shadows for better performance.
+- The new high-granularity data can be demanding; ensure your browser is up-to-date.
 
 ## Future Enhancements
 
-- [ ] Multiple dancer support
-- [ ] Export animations to video
-- [ ] VR/AR viewing modes
-- [ ] Real-time streaming support
-- [ ] Performance comparison tools
-- [ ] Social sharing features
+- [ ] Multiple person support.
+- [ ] Advanced facial expression analysis.
+- [ ] Fine-grained finger movement visualization.
+- [ ] VR/AR viewing modes.
