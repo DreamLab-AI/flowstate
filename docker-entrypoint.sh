@@ -26,13 +26,13 @@ log_error() {
 # Initialize directories
 init_directories() {
     log_info "Initializing directories..."
-    
+
     # Create required directories if they don't exist
     mkdir -p "${FLOWSTATE_OUTPUT_DIR:-/app/output}"
     mkdir -p "${FLOWSTATE_LOG_DIR:-/app/logs}"
     mkdir -p "${FLOWSTATE_TEMP_DIR:-/tmp/flowstate}"
     mkdir -p "${FLOWSTATE_CACHE_DIR:-/tmp/flowstate/cache}"
-    
+
     # Ensure proper permissions
     if [ -w "${FLOWSTATE_OUTPUT_DIR}" ]; then
         log_info "Output directory is writable"
@@ -45,31 +45,31 @@ init_directories() {
 # Validate environment
 validate_environment() {
     log_info "Validating environment..."
-    
+
     # Check Python
     if ! python --version &> /dev/null; then
         log_error "Python is not available"
         exit 1
     fi
-    
+
     # Check ffmpeg
     if ! ffmpeg -version &> /dev/null; then
         log_error "FFmpeg is not available"
         exit 1
     fi
-    
+
     # Test imports
-    if ! python -c "import mediapipe, cv2, numpy" &> /dev/null; then
-        log_error "Required Python packages are not available"
+    if ! python -c "import torch, ultralytics, cv2, numpy" &> /dev/null; then
+        log_error "Required Python packages (torch, ultralytics, etc.) are not available"
         exit 1
     fi
-    
+
     # Check flowstate command
     if ! command -v flowstate &> /dev/null; then
         log_error "flowstate command not found"
         exit 1
     fi
-    
+
     log_info "Environment validation passed"
 }
 
@@ -85,11 +85,6 @@ handle_special_commands() {
             log_info "Starting interactive shell..."
             exec /bin/bash
             ;;
-        "dev-server")
-            log_info "Starting development viewer server..."
-            cd "${FLOWSTATE_OUTPUT_DIR}/viewer" || exit 1
-            exec python /app/viewer/dev_server.py --port 8080
-            ;;
         "server"|"serve")
             log_info "Starting FlowState web server..."
             shift  # Remove the 'server' command
@@ -101,14 +96,14 @@ handle_special_commands() {
 # Performance tuning
 tune_performance() {
     log_info "Applying performance optimizations..."
-    
+
     # Set OpenMP threads if not already set
     if [ -z "$OMP_NUM_THREADS" ]; then
         CORES=$(nproc --all)
         export OMP_NUM_THREADS=$((CORES > 4 ? 4 : CORES))
         log_info "Set OMP_NUM_THREADS to $OMP_NUM_THREADS"
     fi
-    
+
     # Enable OpenCV optimizations
     export OPENCV_OPENCL_RUNTIME=1
     export OPENCV_OPENCL_DEVICE=disabled  # CPU-only for consistency
@@ -118,30 +113,30 @@ tune_performance() {
 main() {
     log_info "FlowState Docker Container Starting..."
     log_info "Version: $(flowstate --version 2>/dev/null || echo 'unknown')"
-    
+
     # Initialize
     init_directories
     validate_environment
     tune_performance
-    
+
     # Handle special commands
     handle_special_commands "$1"
-    
+
     # Check if no arguments provided
     if [ $# -eq 0 ]; then
         log_warn "No command provided. Showing help..."
         exec flowstate --help
     fi
-    
+
     # Handle 'analyze' as a compatibility wrapper
     if [ "$1" = "analyze" ]; then
         log_info "Removing 'analyze' command for compatibility..."
         shift  # Remove 'analyze' from arguments
     fi
-    
+
     # Log the command being executed
     log_info "Executing: flowstate $*"
-    
+
     # Execute flowstate with all arguments
     exec flowstate "$@"
 }

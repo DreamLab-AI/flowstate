@@ -45,3 +45,13 @@ This document outlines the current state of the implementation, including known 
     -   Add unit tests for the `PoseAnalyzer`, mocking the YOLO model to test the interpolation and smoothing logic.
     -   Add integration tests that run a small video through the entire pipeline and verify the output JSON structure.
     -   Create regression tests with known input videos and expected keypoint outputs to prevent future model changes from breaking results.
+
+## 5. Configuration (`src/core/config.py`)
+
+-   **Inconsistency**: Several settings in the `Settings` class are not yet fully implemented or respected by the `OpenPoseDetector`.
+    -   `openpose_hand_detection`: Although set to `True`, the hand detection is a stub.
+    -   `openpose_face_detection`: Although set to `True`, the face detection is a stub.
+    -   `openpose_temporal_smoothing`: Although set to `True`, the smoothing function is a placeholder.
+    -   `openpose_interpolation_factor`: This is hard-coded to `10` in the `OpenPoseDetector` and does not use the value from the settings.
+    -   `openpose_smoothing_window`: This is hard-coded to `5` in the `OpenPoseDetector`.
+-   **Future Work**: Refactor the `OpenPoseDetector` to properly consume these settings from the `settings` object, ensuring that the application's behavior can be controlled dynamically through configuration.

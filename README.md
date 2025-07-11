@@ -90,10 +90,15 @@ Docker Compose is the simplest way to run the application, as it automatically h
     ```bash
     docker-compose run --rm flowstate
     ```
-    This command will analyze `input.mp4` (if it exists) or you can pass a URL:
+    This command will analyze `input.mp4` (if it exists). To analyze a YouTube video, pass the `--url` argument:
     ```bash
     docker-compose run --rm flowstate --url "YOUR_YOUTUBE_URL"
     ```
+3.  **View the output:** After the analysis, the generated viewer files will be in the `data/output/viewer` directory. You can serve them using the `viewer` service:
+    ```bash
+    docker-compose up -d viewer
+    ```
+    The viewer will be available at `http://localhost:8000`.
 
 ### Publishing to GitHub Pages
 
@@ -155,6 +160,12 @@ Running locally without Docker is complex due to the CUDA and PyTorch dependenci
 -   `requirements.txt`: Python dependencies.
 -   `Dockerfile`: Defines the GPU-enabled Docker image.
 -   `docker-compose.yml`: Defines services for easy development and deployment.
+
+## Current Limitations
+
+-   **Hand and Face Detection**: The current implementation uses placeholder (synthetic) data for hand and face keypoints. While the data structure is in place, the actual detection models are not yet integrated.
+-   **Motion Smoothing**: The temporal smoothing algorithm is a basic implementation. More advanced techniques like Kalman filtering could provide better results.
+-   **Single Person Analysis**: The analyzer is designed to track a single person and will only process the first person detected in a frame.
 
 ## Contributing
 

@@ -148,6 +148,12 @@ graph TB
 - **Why?** Provides robust, type-safe configuration management.
 - **Benefit**: Prevents common errors from misconfigured settings and allows for easy extension with new parameters.
 
+## Current Implementation Status
+
+-   **Hand and Face Detection**: The `analyzer.py` module includes methods (`_detect_hands`, `_detect_face`) that are currently **stubs**. They generate synthetic data based on wrist and head positions rather than using a dedicated detection model. This provides the correct data structure for the viewer but does not reflect true hand or face articulation.
+-   **Motion Smoothing**: The smoothing algorithm (`_gaussian_smooth_pose`) is a placeholder and returns the original, unsmoothed data. A more sophisticated filter (e.g., Gaussian or Kalman) is needed to reduce jitter effectively.
+-   **Batch Processing**: While the architecture is designed for batch processing, the current implementation processes frames one by one.
+
 ## Performance and Security
 
 ### Performance

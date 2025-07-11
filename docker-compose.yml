@@ -7,146 +7,88 @@ services:
       dockerfile: Dockerfile
       args:
         - BUILDKIT_INLINE_CACHE=1
-    image: flowstate:1.0
+    image: flowstate:2.0-openpose
     container_name: flowstate-analyzer
 
     # GPU runtime configuration
     runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    # Volumes for persistence and data exchange
+    volumes:
+      - ./data/input:/data/input:ro
+      - ./data/output:/app/output:rw
+      - ./logs:/app/logs:rw
+      - ./input.mp4:/app/input.mp4:ro
+      - flowstate-cache:/tmp/flowstate/cache
+      - ./src/viewer:/app/src/viewer:ro
+
+    # Environment configuration
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - CUDA_VISIBLE_DEVICES=all
-
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '4'
-          memory: 4G
-        reservations:
-          cpus: '2'
-          memory: 2G
-      # GPU reservation
-      reservations:
-        devices:
-          - driver: nvidia
-            count: 1
-            capabilities: [gpu]
-
-    # Volumes for persistence and data exchange
-    volumes:
-      # Input/Output directories
-      - ./data/input:/data/input:ro
-      - ./data/output:/app/output:rw
-      - ./logs:/app/logs:rw
-
-      # Mount input.mp4 if it exists in the host directory
-      - ./input.mp4:/app/input.mp4:ro
-
-      # Cache directory for faster processing
-      - flowstate-cache:/tmp/flowstate/cache
-
-      # Viewer directory for development
-      - ./viewer:/app/viewer:ro
-
-    # Environment configuration
-    environment:
-      # Processing settings
       - FLOWSTATE_OUTPUT_DIR=/app/output
       - FLOWSTATE_LOG_DIR=/app/logs
       - FLOWSTATE_CACHE_DIR=/tmp/flowstate/cache
       - FLOWSTATE_TEMP_DIR=/tmp/flowstate
-
-      # Performance tuning
       - OMP_NUM_THREADS=4
       - OPENCV_VIDEOIO_PRIORITY_FFMPEG=1
-
-      # Logging
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO
 
-    # Network settings
+    # Network settings for serving viewer
     ports:
       - "8080:8080"
-    network_mode: bridge
 
-    # Security settings
+    # Security and user settings
     security_opt:
       - no-new-privileges:true
-    read_only: false
-
-    # User settings (non-root)
     user: flowstate
-
-    # Restart policy
     restart: unless-stopped
 
-    # Command override example (commented out)
-    # command: analyze "https://youtube.com/watch?v=VIDEO_ID" --quality high
-
-  # Development viewer service
+  # Development viewer service (for quick testing of the viewer)
   viewer:
     image: python:3.11-slim
     container_name: flowstate-viewer
-    working_dir: /app
-
+    working_dir: /app/output/viewer
     volumes:
-      - ./viewer:/app:ro
       - ./data/output:/app/output:ro
-
     ports:
-      - "8080:8080"
-
-    environment:
-      - PYTHONUNBUFFERED=1
-
-    command: python /app/dev_server.py --port 8080 --directory /app/output/viewer
-
-    depends_on:
-      - flowstate
-
+      - "8000:8000"
+    command: python -m http.server 8000
     profiles:
       - dev
 
-  # Production web server service
+  # This service is deprecated in favor of the main `flowstate` service's server command.
+  # It is kept for reference but should not be used for production.
   web-server:
     build:
       context: .
       dockerfile: Dockerfile
-    image: flowstate:1.0
+    image: flowstate:2.0-openpose
     container_name: flowstate-web-server
-
     volumes:
       - ./data/output:/app/output:ro
       - ./logs:/app/logs:rw
-      - ./input.mp4:/app/input.mp4:ro
-
     ports:
-      - "8080:8080"
-
+      - "8081:8080"
     environment:
       - FLOWSTATE_OUTPUT_DIR=/app/output
       - FLOWSTATE_LOG_DIR=/app/logs
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=INFO
-
-    # Use host networking for better accessibility
-    network_mode: host
-
-    # Run as non-root user
     user: flowstate
-
-    # Auto-restart for reliability
     restart: unless-stopped
-
-    # Start the web server
     command: server --port 8080 --host 0.0.0.0
-
-    depends_on:
-      - flowstate
-
     profiles:
-      - production
+      - production-legacy
 
 # Named volumes for persistence
 volumes:
